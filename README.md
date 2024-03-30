@@ -6,12 +6,6 @@ Once launched, an interactive shell prompts the user for the year and month, the
 
 ## Options
 
-- `--year`: Integer specifying the year. Default value is the current year.
-
-- `--month`: Integer specifying the month. Default value is the current month.
-
-- `--locale`: String specifying the locale. Default value is "en_US". "ja_JP" and "zh_TW" are also available.
-
 - `--link_style`: String specifying the style of the hyperlink. Default value is "%Y%m%d".
 
 - `--format`: String specifying the output format. Default value is "md". "csv" is also available.
