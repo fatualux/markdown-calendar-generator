@@ -1,56 +1,92 @@
 import calendar
-import argparse
-from datetime import datetime
 
-# Get current year & month as default values
-curr_year = datetime.today().year
-curr_month = datetime.today().month
-DEFAULT_LINK_STYLE = '%Y%m%d'
-DEFAULT_LOCALE = 'en_US'
-DEFAULT_FORMAT = 'md'
 
-SUPPORTED_LOCALES = ['en_US', 'ja_JP', 'zh_TW']
+def linkify(year, month, day, style):
+    return f'[{day}](#{year}{str(month).zfill(2)}{str(day).zfill(2)})'
 
-parser = argparse.ArgumentParser(description='Generates calendar of given month, year in csv format')
-parser.add_argument('--year', type=int, default=curr_year, help='Integer specifying the year. Default value is the current year.')
-parser.add_argument('--month', type=int, default=curr_month, help='Integer specifying the month. Default value is the current month.')
-parser.add_argument('--locale', type=str, default=DEFAULT_LOCALE, help='String specifying the locale. Default value is "en_US". "ja_JP" and "zh_TW" are also available.')
-parser.add_argument('--link_style', type=str, default=DEFAULT_LINK_STYLE, help='String specifying the style of the hyperlink. Default value is "%Y%m%d".'.replace(r'%', r'%%'))
-parser.add_argument('--format', type=str, default=DEFAULT_FORMAT, help='String specifying the output format. Default value is "md". "csv" is also available.')
-parser.add_argument('--start_sunday', default=False, action='store_true', help='Flag that specifys whether a week starts from Sunday.')
 
-args = parser.parse_args()
+def add_notes(month_calendar):
+    while True:
+        message = "Enter the day you want to add note (or 'exit' to finish): "
+        date = input(message)
+        if date.lower() == 'exit':
+            break
+        try:
+            date = int(date)
+            if 1 <= date <= 31:
+                note = input("Enter note for this date: ")
+                color = input("Enter color for this note: ")
+                month_calendar[date].append((note, color))
+                print(f"Note added for {date}.")
+            else:
+                message = "Invalid date. Please enter \
+                           a valid day between 1 and 31."
+                print(message)
+        except ValueError:
+            print("Invalid input. Please enter a valid day as a number.")
+    return month_calendar
 
-assert 1 <= args.year <= 99999, '[Error] Invalid year'
-assert 1 <= args.month <= 12, '[Error] Invalid month'
-assert args.locale in SUPPORTED_LOCALES, '[Error] Locale is not supported'
 
-def linkify(year=args.year, month=args.month, day=1, style=args.link_style):
-    return f'[{day}](#{datetime(year, month, day).strftime(style)})'
+# Prompt user for year
+year = input("Enter the year: ")
+while not year.isdigit() or int(year) <= 0:
+    year = input("Invalid input. Please enter a valid year: ")
+year = int(year)
 
-locale_weekdays = [{'en_US': 'Mon', 'ja_JP': '月', 'zh_TW': '一'},
-                   {'en_US': 'Tue', 'ja_JP': '火', 'zh_TW': '二'},
-                   {'en_US': 'Wed', 'ja_JP': '水', 'zh_TW': '三'},
-                   {'en_US': 'Thu', 'ja_JP': '木', 'zh_TW': '四'},
-                   {'en_US': 'Fri', 'ja_JP': '金', 'zh_TW': '五'},
-                   {'en_US': 'Sat', 'ja_JP': '土', 'zh_TW': '六'},
-                   {'en_US': 'Sun', 'ja_JP': '日', 'zh_TW': '日'},]
+# Prompt user for month
+message = "Enter the month (as a number): "
+month = input(message)
+while not month.isdigit() or not 1 <= int(month) <= 12:
+    message = "Invalid input. Please enter a valid month (as a number): "
+    month = input(message)
+month = int(month)
 
-weekdays = [locale_weekdays[i][args.locale] for i in range(6)]
-weekdays = [locale_weekdays[6][args.locale]] + weekdays if args.start_sunday else weekdays + [locale_weekdays[6][args.locale]]
+# Create calendar and add notes
+month_calendar = {day: [] for day in range(1, calendar.monthrange
+                                           (year, month)[1] + 1)}
+month_calendar = add_notes(month_calendar)
 
-calendar.setfirstweekday(calendar.SUNDAY if args.start_sunday else calendar.MONDAY)
-raw_calendar = calendar.monthcalendar(args.year, args.month)
+# Generate Markdown file
+output = f'# {calendar.month_name[month]} {year}\n\n'
 
-if args.format == 'csv':
-    output = ','.join(weekdays) + '\n' + '\n'.join([','.join([linkify(day=d) if d != 0 else '' for d in w]) for w in raw_calendar])
+locale_weekdays = [{'en_US': 'Mon', 'it_IT': 'Lun'},
+                   {'en_US': 'Tue', 'it_IT': 'Mar'},
+                   {'en_US': 'Wed', 'it_IT': 'Mer'},
+                   {'en_US': 'Thu', 'it_IT': 'Gio'},
+                   {'en_US': 'Fri', 'it_IT': 'Ven'},
+                   {'en_US': 'Sat', 'it_IT': 'Sab'},
+                   {'en_US': 'Sun', 'it_IT': 'Dom'},]
 
-elif args.format == 'md':
-    full_char = True if args.locale in ['ja_JP', 'zh_TW'] else False
-    width = len(linkify(day=10))
-    output = ( '| ' + ' | '.join([day.ljust(width if not full_char else width - 1, ' ') for day in weekdays]) + ' |\n' +
-               ('| ' + '-' * width + ' ') * 7 + '|\n' + 
-               '\n'.join(['| ' + ' | '.join([linkify(day=d).ljust(width, ' ') if d != 0 else ''.ljust(width, ' ') for d in w]) + ' |' for w in raw_calendar]))
+weekdays = [locale_weekdays[i]['it_IT'] for i in range(7)]
+calendar.setfirstweekday(calendar.MONDAY)
 
-if __name__ == '__main__':
-    print(output)
+output += '| ' + ' | '.join(weekdays) + ' |\n'
+output += '| ' + ' | '.join(['---'] * len(weekdays)) + ' |\n'
+
+raw_calendar = calendar.monthcalendar(year, month)
+
+# Find the maximum width of the notes
+max_note_width = max(len(note) for day_notes in month_calendar.values() for note, _ in day_notes)
+
+for week in raw_calendar:
+    week_output = '| '
+    for day in week:
+        if day != 0:
+            # Check if there are notes for this day
+            if month_calendar[day]:
+                notes_html = ' - ' + ', '.join([f'<span style="color: {color};\
+                                                ">{note.ljust(max_note_width)}</span>' for note,
+                                                color in month_calendar[day]])
+            else:
+                notes_html = ''
+            week_output += f'[{day}](#{year}{str(month).zfill(2)}{str(day).zfill(2)}){notes_html} | '
+        else:
+            week_output += '  | '
+    output += week_output[:-1] + '|\n'
+
+# Write to file
+file_name = f"{month:02d}_{year}.md"
+with open(file_name, 'w') as f:
+    f.write(output)
+
+print(f"Markdown file saved as {file_name}")
