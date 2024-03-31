@@ -24,19 +24,26 @@ def add_notes(month_calendar):
             print("Invalid input. Please enter a valid day as a number.")
     return month_calendar
 
-def generate_css():
-    css_content = '''
-    body {
-        font-family: Arial, sans-serif;
+def generate_css(font_name):
+    css_content = f'''
+  @font-face {{
+        font-family: '{font_name}';
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+    }}
+    body {{
+
         background-color: #f2f2f2;
-    }
-        table {
-            width: 30%;
+        font-family: '{font_name}', Arial, sans-serif;
+    }}
+        table {{
+            width: 33%;
             border-collapse: collapse;
             border-left: none;
             border-right: none;
-        }
-        th, td {
+        }}
+        th, td {{
             padding: 8px;
             text-align: left;
             border-bottom: 1px solid #000000;
@@ -44,11 +51,11 @@ def generate_css():
             border-left: none;
             border-right: none;
             border-collapse: collapse;
-        }
-        tr:hover {
+        }}
+        tr:hover {{
             background-color: #f5f5f5;
-        }
-        '''
+        }}
+    '''
     with open("calendar_style.css", "w") as css_file:
         css_file.write(css_content)
     print("CSS file generated: calendar_style.css")
@@ -60,40 +67,37 @@ italian_weekday_abbr = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
 italian_month_names = ['', 'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
                        'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre']
 
-# Prompt user for year
-year = input("Enter the year: ")
-while not year.isdigit() or int(year) <= 0:
-    year = input("Invalid input. Please enter a valid year: ")
-year = int(year)
-
-# Prompt user for month
-message = "Enter the month (as a number): "
-month = input(message)
-while not month.isdigit() or not 1 <= int(month) <= 12:
-    message = "Invalid input. Please enter a valid month (as a number): "
-    month = input(message)
-month = int(month)
+# Prompt user for font name
+font_name = input("Enter the font name: ")
 
 # Create calendar and add notes
+year = int(input("Enter the year: "))
+month = int(input("Enter the month (as a number): "))
+
 month_calendar = {day: [] for day in range(1, calendar.monthrange(year, month)[1] + 1)}
 month_calendar = add_notes(month_calendar)
 
 # Generate HTML file
 output = f'<!DOCTYPE html>\n<html>\n<head>\n<title>{italian_month_names[month]} {year}</title>\n'
 output += f'<link rel="stylesheet" type="text/css" href="calendar_style.css">\n</head>\n<body>\n'
-output += f'<h1>{italian_month_names[month]} {year}</h1>\n\n'
-output += '<table border="1">\n<tr><th>Giorno</th><th>Num</th><th>Nota/Appuntamento</th></tr>\n'
+
+# Generate table: in the first line put <h1>{italian_month_names[month]} {year}</h1>
+output += f'<table border="1">\n<tr><th colspan="7"><h1>{italian_month_names[month]} {year}</h1></th></tr>\n'
 
 raw_calendar = calendar.monthcalendar(year, month)
 
 for week in raw_calendar:
+    output += '<tr>'
     for day in week:
         if day != 0:
             # Get the Italian weekday abbreviation
             weekday = italian_weekday_abbr[calendar.weekday(year, month, day)]
             # Check if there are notes for this day
-            notes = '<br>'.join(['<span style="color: {};">{}</span>'.format(color, note.replace("\\n", "<br>")) for note, color in month_calendar[day]])
-            output += f'<tr><td>{weekday}</td><td>{day}</td><td>{notes}</td></tr>\n'
+            notes = '<br>'.join(['<span style="color: {}; font-weight: bold;">{}</span>'.format(color, note.replace("\\n", "<br>")) for note, color in month_calendar[day]])
+            output += f'<td>{weekday}</td><td>{day}</td><td>{notes}</td>'
+        else:
+            output += '<td></td><td></td><td></td>'
+    output += '</tr>\n'
 
 output += '</table>\n</body>\n</html>'
 
@@ -105,4 +109,4 @@ with open(html_file_name, 'w') as f:
 print(f"HTML file saved as {html_file_name}")
 
 # Generate CSS file
-generate_css()
+generate_css(font_name)
