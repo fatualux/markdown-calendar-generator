@@ -94,10 +94,15 @@ for week in raw_calendar:
             weekday = italian_weekday_abbr[calendar.weekday(year, month, day)]
             # Check if there are notes for this day
             notes = '<br>'.join(['<span style="color: {}; font-weight: bold;">{}</span>'.format(color, note.replace("\\n", "<br>")) for note, color in month_calendar[day]])
-            output += f'<td>{weekday}</td><td>{day}</td><td>{notes}</td>'
+            # Add styling to create a frame around the cells with notes
+            if month_calendar[day]:
+                output += f'<td style="border-left: 3px solid {month_calendar[day][0][1]}; border-top: 3px solid {month_calendar[day][0][1]}; border-bottom: 3px solid {month_calendar[day][0][1]};">{weekday}</td><td style="border-top: 3px solid {month_calendar[day][0][1]}; border-bottom: 3px solid {month_calendar[day][0][1]};">{day}</td><td style="border-top: 3px solid {month_calendar[day][0][1]}; border-bottom: 3px solid {month_calendar[day][0][1]}; border-right: 3px solid {month_calendar[day][0][1]};">{notes}</td>'
+            else:
+                output += f'<td>{weekday}</td><td>{day}</td><td>{notes}</td>'
         else:
             output += '<td></td><td></td><td></td>'
     output += '</tr>\n'
+
 
 output += '</table>\n</body>\n</html>'
 
