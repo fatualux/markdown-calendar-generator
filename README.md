@@ -51,7 +51,3 @@ Japanese calendars are also supported
 
 Once launched, an interactive shell prompts the user for the year and month, then it asks for the notes to add.
 Months and days of the week will be written in Italian.
-
-## html-list-it
-
-It generates an HTML file with the calendar and the notes of the chosen month, and a CSS file to customize the appearance.
